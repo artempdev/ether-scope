@@ -1,8 +1,4 @@
-type EtherscanResponse = {
-  status: string;
-  message: string;
-  result: string;
-};
+import type { EtherscanResponse, TxListResponse, Activity } from "./types.ts";
 
 async function getBalance(address: string, apiKey: string): Promise<string> {
   const url =
@@ -20,18 +16,6 @@ async function getBalance(address: string, apiKey: string): Promise<string> {
 
   return data.result;
 }
-
-type Transaction = { timeStamp: string };
-type TxListResponse = {
-  status: string;
-  message: string;
-  result: Transaction[] | string;
-};
-
-type Activity = {
-  txCount: number;
-  firstSeen: string | null;
-};
 
 async function getActivity(address: string, apiKey: string): Promise<Activity> {
   const url =
