@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { formatEther, isAddress } from "ethers";
-import { getBalance } from "./screen-address.ts";
+import { getActivity, getBalance } from "./screen-address.ts";
 
 config({ quiet: true });
 
@@ -26,6 +26,9 @@ async function main() {
 
   const balanceWei = await getBalance(address, apiKey);
   const balanceEth = formatEther(balanceWei);
+
+  const activity = await getActivity(address, apiKey);
+  console.log(activity);
 
   console.log("address,balance_eth");
   console.log(`${address},${balanceEth}`);
