@@ -24,14 +24,20 @@ async function main() {
     process.exit(1);
   }
 
-  const balanceWei = await getBalance(address, apiKey);
-  const balanceEth = formatEther(balanceWei);
+  const [balanceWei, activity] = await Promise.all([
+    getBalance(address, apiKey),
+    getActivity(address, apiKey),
+  ]);
 
-  const activity = await getActivity(address, apiKey);
-  console.log(activity);
+  const row = {
+    address,
+    balance_eth: formatEther(balanceWei),
+    tx_count: activity.txCount,
+    first_seen_utc: activity.firstSeen ?? "",
+  };
 
-  console.log("address,balance_eth");
-  console.log(`${address},${balanceEth}`);
+  console.log(Object.keys(row).join(","));
+  console.log(Object.values(row).join(","));
 }
 
 try {
