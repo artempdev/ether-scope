@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+import { formatEther, isAddress } from "ethers";
 import { getBalance } from "./screen-address.ts";
 
 config({ quiet: true });
@@ -6,7 +7,6 @@ config({ quiet: true });
 const apiKey = process.env.ETHERSCAN_API_KEY;
 const address = process.argv[2];
 
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 async function main() {
   if (!apiKey) {
@@ -19,15 +19,16 @@ async function main() {
     process.exit(1);
   }
 
-  if (!ADDRESS_PATTERN.test(address)) {
+  if (!isAddress(address)) {
     console.error(`Invalid Ethereum address: ${address}`);
     process.exit(1);
   }
 
   const balanceWei = await getBalance(address, apiKey);
+  const balanceEth = formatEther(balanceWei);
 
   console.log("address,balance_eth");
-  console.log(`${address},${balanceWei}`);
+  console.log(`${address},${balanceEth}`);
 }
 
 try {
