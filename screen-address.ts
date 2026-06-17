@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { EtherscanProvider } from "ethers";
 import type { Transaction, Activity } from "./types.ts";
 
@@ -22,11 +23,30 @@ async function getActivity(provider: EtherscanProvider, address: string): Promis
   })) as Transaction[];
 
   if (transactions.length === 0) {
-    return { txCount: 0, firstSeen: null };
+    return { txCount: 0, firstSeen: null, counterparties: [] };
   }
 
   const firstSeen = new Date(Number(transactions[0].timeStamp) * 1000).toISOString();
-  return { txCount: transactions.length, firstSeen };
+
+  const self = address.toLowerCase();
+  const counterparties = new Set<string>();
+  for (const tx of transactions) {
+    for (const party of [tx.from, tx.to]) {
+      const other = party?.toLowerCase();
+      if (other && other !== self) counterparties.add(other);
+    }
+  }
+
+  return { txCount: transactions.length, firstSeen, counterparties: [...counterparties] };
 }
 
-export { getBalance, getActivity, isContract };
+function loadWatchlist(path: string | URL): Set<string> {
+  const addresses = JSON.parse(readFileSync(path, "utf8")) as string[];
+  return new Set(addresses.map((a) => a.toLowerCase()));
+}
+
+function countFlaggedContacts(counterparties: string[], watchlist: Set<string>): number {
+  return counterparties.filter((counterparty) => watchlist.has(counterparty)).length;
+}
+
+export { getBalance, getActivity, isContract, loadWatchlist, countFlaggedContacts };
