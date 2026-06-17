@@ -38,11 +38,16 @@ node index.ts 0x157e4F2ce80779f105ad4c2fA6E32124b622609b > output.csv
 
 ## Output columns
 
-| Column           | Meaning                                            |
-| ---------------- | -------------------------------------------------- |
-| `address`        | The wallet address that was screened               |
-| `balance_eth`    | Current ETH balance                                |
-| `tx_count`       | Number of transactions (capped at 10,000)          |
-| `first_seen_utc` | Timestamp of the wallet's first transaction (UTC)  |
+| Column             | Meaning                                                              |
+| ------------------ | -------------------------------------------------------------------- |
+| `address`          | The wallet address that was screened                                 |
+| `balance_eth`      | Current ETH balance                                                  |
+| `tx_count`         | Number of transactions (capped at 10,000)                            |
+| `first_seen_utc`   | Timestamp of the wallet's first transaction (UTC)                    |
+| `is_contract`      | `true` if the address is a smart contract, `false` if a wallet       |
+| `flagged_contacts` | How many of the wallet's counterparties appear on `watchlist.json`   |
 
 An address with no history shows `0` transactions and a blank `first_seen_utc`.
+
+`watchlist.json` is a small stub of known-bad addresses (seeded with sanctioned
+Tornado Cash addresses).
