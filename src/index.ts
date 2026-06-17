@@ -1,18 +1,20 @@
 import { config } from "dotenv";
-import { EtherscanProvider, formatEther, isAddress } from "ethers";
+import { formatEther, isAddress } from "ethers";
+import { createProvider } from "./providers/index.ts";
 import {
   countFlaggedContacts,
   getActivity,
   getBalance,
   isContract,
   loadWatchlist,
-} from "./screen-address.ts";
+} from "./utils/screen-address.ts";
 
 config({ quiet: true });
 
 const apiKey = process.env.ETHERSCAN_API_KEY;
 const address = process.argv[2];
 
+const watchlist = loadWatchlist();
 
 async function main() {
   if (!apiKey) {
@@ -21,7 +23,7 @@ async function main() {
   }
 
   if (!address) {
-    console.error("Usage: node index.ts <wallet-address>");
+    console.error("Usage: node src/index.ts <wallet-address>");
     process.exit(1);
   }
 
@@ -30,15 +32,13 @@ async function main() {
     process.exit(1);
   }
 
-  const provider = new EtherscanProvider("mainnet", apiKey);
+  const provider = createProvider(apiKey);
 
   const [balanceWei, activity, contract] = await Promise.all([
     getBalance(provider, address),
     getActivity(provider, address),
     isContract(provider, address),
   ]);
-
-  const watchlist = loadWatchlist(new URL("./watchlist.json", import.meta.url));
 
   const row = {
     address,

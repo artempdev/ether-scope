@@ -1,0 +1,85 @@
+import { readFileSync } from "node:fs";
+import type { EtherscanProvider } from "ethers";
+import { EIP_7702_PREFIX, EMPTY_CODE } from "../constants/index.ts";
+import type { Transaction, Activity } from "../types/index.ts";
+
+async function getBalance(
+  provider: EtherscanProvider,
+  address: string,
+): Promise<bigint> {
+  return provider.getBalance(address);
+}
+
+async function isContract(
+  provider: EtherscanProvider,
+  address: string,
+): Promise<boolean> {
+  const code = await provider.getCode(address);
+  return code !== EMPTY_CODE && !code.startsWith(EIP_7702_PREFIX);
+}
+
+async function getActivity(
+  provider: EtherscanProvider,
+  address: string,
+): Promise<Activity> {
+  //txlist returns at most 10,000 rows
+  const transactions = (await provider.fetch("account", {
+    action: "txlist",
+    address,
+    startblock: 0,
+    endblock: 99999999,
+    sort: "asc",
+  })) as Transaction[];
+
+  if (transactions.length === 0) {
+    return { txCount: 0, firstSeen: null, counterparties: [] };
+  }
+
+  const firstSeen = new Date(
+    Number(transactions[0].timeStamp) * 1000,
+  ).toISOString();
+  return {
+    txCount: transactions.length,
+    firstSeen,
+    counterparties: collectCounterparties(transactions, address),
+  };
+}
+
+function collectCounterparties(
+  transactions: Transaction[],
+  address: string,
+): string[] {
+  const self = address.toLowerCase();
+  const counterparties = new Set<string>();
+
+  for (const tx of transactions) {
+    for (const party of [tx.from, tx.to]) {
+      const other = party?.toLowerCase();
+      if (other && other !== self) counterparties.add(other);
+    }
+  }
+
+  return [...counterparties];
+}
+
+function loadWatchlist(): Set<string> {
+  const path = new URL("../../watchlist.json", import.meta.url);
+  const addresses = JSON.parse(readFileSync(path, "utf8")) as string[];
+  return new Set(addresses.map((a) => a.toLowerCase()));
+}
+
+function countFlaggedContacts(
+  counterparties: string[],
+  watchlist: Set<string>,
+): number {
+  return counterparties.filter((counterparty) => watchlist.has(counterparty))
+    .length;
+}
+
+export {
+  getBalance,
+  getActivity,
+  isContract,
+  loadWatchlist,
+  countFlaggedContacts,
+};
