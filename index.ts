@@ -1,6 +1,6 @@
 import { config } from "dotenv";
-import { formatEther, isAddress } from "ethers";
-import { getActivity, getBalance } from "./screen-address.ts";
+import { EtherscanProvider, formatEther, isAddress } from "ethers";
+import { getActivity, getBalance, isContract } from "./screen-address.ts";
 
 config({ quiet: true });
 
@@ -24,9 +24,12 @@ async function main() {
     process.exit(1);
   }
 
-  const [balanceWei, activity] = await Promise.all([
-    getBalance(address, apiKey),
-    getActivity(address, apiKey),
+  const provider = new EtherscanProvider("mainnet", apiKey);
+
+  const [balanceWei, activity, contract] = await Promise.all([
+    getBalance(provider, address),
+    getActivity(provider, address),
+    isContract(provider, address),
   ]);
 
   const row = {
@@ -34,6 +37,7 @@ async function main() {
     balance_eth: formatEther(balanceWei),
     tx_count: activity.txCount,
     first_seen_utc: activity.firstSeen ?? "",
+    is_contract: contract,
   };
 
   console.log(Object.keys(row).join(","));
