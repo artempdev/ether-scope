@@ -14,6 +14,7 @@ async function isContract(provider: EtherscanProvider, address: string): Promise
 }
 
 async function getActivity(provider: EtherscanProvider, address: string): Promise<Activity> {
+  // txlist returns at most 10,000 rows
   const transactions = (await provider.fetch("account", {
     action: "txlist",
     address,

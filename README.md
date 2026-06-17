@@ -49,5 +49,18 @@ node index.ts 0x157e4F2ce80779f105ad4c2fA6E32124b622609b > output.csv
 
 An address with no history shows `0` transactions and a blank `first_seen_utc`.
 
-`watchlist.json` is a small stub of known-bad addresses (seeded with sanctioned
-Tornado Cash addresses).
+`watchlist.json` example data of known-bad addresses used to demonstrate the matching
+
+## Limitations / TODOs
+
+- **Transaction data is capped at the earliest 10,000 transactions.** Etherscan
+  returns at most 10,000 rows, and we fetch oldest-first to get an accurate
+  `first_seen`. As a side effect, `tx_count`, counterparties, and
+  `flagged_contacts` only reflect that earliest window — for a very active
+  wallet, recent activity isn't included. A fuller version would paginate by
+  block range (or use an indexer) to cover the full history.
+- **Only normal transactions are analysed.** Internal transactions, ERC-20
+  token transfers, and NFT transfers are not included, so `flagged_contacts`
+  can miss interactions that happen through those (a false negative).
+- **`flagged_contacts` counts contacts, not the address itself.** If the
+  screened address is itself on the watchlist, that isn't reflected here
